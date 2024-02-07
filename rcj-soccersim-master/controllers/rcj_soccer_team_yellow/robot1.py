@@ -68,6 +68,8 @@ class MyRobot1(RCJSoccerRobot):
         self.ball_distance = 0
         self.name = self.robot.getName()
         self.is_ball = False
+        self.ball_x = 0
+        self.ball_y = 0
         while self.robot.step(TIME_STEP) != -1:
             if self.is_new_data():  
                 self.readSensors()
