@@ -45,18 +45,29 @@ class MyRobot1(RCJSoccerRobot):
     def move(self, target_x, target_y):
         target_angle = math.degrees(math.atan2(self.robot_pos[0] - target_x, target_y - self.robot_pos[1]))
         target_distance = math.sqrt((self.robot_pos[0] - target_x)**2 + (self.robot_pos[1] - target_y)**2)
+        diff = self.robot_angle - target_angle
+        VR = 0
+        VL = 0
         if target_distance < 0.05:
-            self.left_motor.setVelocity(0)
-            self.right_motor.setVelocity(0)
-        elif self.robot_angle > target_angle + 15:
-            self.left_motor.setVelocity(-10)
-            self.right_motor.setVelocity(10)
-        elif self.robot_angle < target_angle - 15:
-            self.left_motor.setVelocity(10)
-            self.right_motor.setVelocity(-10)
+            VR = 0
+            VL = 0
+        elif diff > 30:
+            VL = -10
+            VR = 10
+        elif diff < -30:
+            VL = 10
+            VR = -10
         else:
-            self.left_motor.setVelocity(10)
-            self.right_motor.setVelocity(10)
+            VL = 10 - diff*0.3
+            VR = 10 + diff*0.3
+
+
+        if VR > 10: VR = 10
+        if VR < -10: VR = -10
+        if VL > 10: VL = 10
+        if VL < -10: VL = -10
+        self.left_motor.setVelocity(VL)
+        self.right_motor.setVelocity(VR)
     def run(self):
         startTime = time.time()
         self.robot_pos = [0, 0]
