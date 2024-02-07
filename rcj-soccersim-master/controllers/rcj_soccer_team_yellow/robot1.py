@@ -91,3 +91,16 @@ class MyRobot1(RCJSoccerRobot):
                     self.move(self.ball_x, self.ball_y)
                     if self.ball_distance > 0.2:
                         self.arrived_to_target = False
+
+
+
+# Tmrin 12:
+# BBK, agar toop tavasote robot dide shod robot top ra goal konad va dar gheir in soorat be position
+# haye zir beravad
+# robot1 -> (-0.2, -0.3)
+# robot2 -> (   0, -0.7)
+# robot3 -> ( 0.2, -0.3)
+
+# tamrin 13:
+# BBK, robot az har 2 jahat betavanad be samte target beravad
+
