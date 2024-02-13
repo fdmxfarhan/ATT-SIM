@@ -68,10 +68,10 @@ class MyRobot1(RCJSoccerRobot):
         while self.robot.step(TIME_STEP) != -1:
             if self.is_new_data():  
                 self.readSensors()
-                if self.target_distance > 0.05 and not self.arrived_to_target:
-                    self.move(self.target_x, self.target_y)
-                else:
-                    self.arrived_to_target = True
-                    self.move(self.ball_x, self.ball_y)
-                    if self.ball_distance > 0.2:
-                        self.arrived_to_target = False
+                # if self.target_distance > 0.05 and not self.arrived_to_target:
+                #     self.move(self.target_x, self.target_y)
+                # else:
+                #     self.arrived_to_target = True
+                #     self.move(self.ball_x, self.ball_y)
+                #     if self.ball_distance > 0.2:
+                #         self.arrived_to_target = False
