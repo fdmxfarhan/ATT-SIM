@@ -46,21 +46,39 @@ class MyRobot3(RCJSoccerRobot):
         target_angle = math.degrees(math.atan2(self.robot_pos[0] - target_x, target_y - self.robot_pos[1]))
         target_distance = math.sqrt((self.robot_pos[0] - target_x)**2 + (self.robot_pos[1] - target_y)**2)
         diff = self.robot_angle - target_angle
+        if diff > 180: diff -= 360
+        if diff <-180: diff += 360
+        
         VR = 0
         VL = 0
-        if target_distance < 0.05:
-            VR = 0
-            VL = 0
-        elif diff > 30:
-            VL = -10
-            VR = 10
-        elif diff < -30:
-            VL = 10
-            VR = -10
+        if diff > -90 and diff < 90:
+            if target_distance < 0.05:
+                VR = 0
+                VL = 0
+            elif diff > 30:
+                VL = -10
+                VR = 10
+            elif diff < -30:
+                VL = 10
+                VR = -10
+            else:
+                VL = 10 - diff*0.3
+                VR = 10 + diff*0.3
         else:
-            VL = 10 - diff*0.3
-            VR = 10 + diff*0.3
-
+            if diff > 0: diff = diff - 180
+            else: diff = -180 - diff
+            if target_distance < 0.05:
+                VR = 0
+                VL = 0
+            elif diff > 30:
+                VL = -10
+                VR = 10
+            elif diff < -30:
+                VL = 10
+                VR = -10
+            else:
+                VL = -10 - diff*0.3
+                VR = -10 + diff*0.3
 
         if VR > 10: VR = 10
         if VR < -10: VR = -10
@@ -86,19 +104,19 @@ class MyRobot3(RCJSoccerRobot):
         while self.robot.step(TIME_STEP) != -1:
             if self.is_new_data():  
                 self.readSensors()
-                # if self.is_ball:
-                #     if self.target_distance > 0.05 and not self.arrived_to_target:
-                #         self.move(self.target_x, self.target_y)
-                #     else:
-                #         self.arrived_to_target = True
-                #         self.move(self.ball_x, self.ball_y)
-                #         if self.ball_distance > 0.2:
-                #             self.arrived_to_target = False
-                # else:
-                #     self.move(
-                #         self.form_positions[self.robot_index - 1][0], 
-                #         self.form_positions[self.robot_index - 1][1]
-                #     )
+                if self.is_ball:
+                    if self.target_distance > 0.05 and not self.arrived_to_target:
+                        self.move(self.target_x, self.target_y)
+                    else:
+                        self.arrived_to_target = True
+                        self.move(self.ball_x, self.ball_y)
+                        if self.ball_distance > 0.2:
+                            self.arrived_to_target = False
+                else:
+                    self.move(
+                        self.form_positions[self.robot_index - 1][0], 
+                        self.form_positions[self.robot_index - 1][1]
+                    )
 
 
 
