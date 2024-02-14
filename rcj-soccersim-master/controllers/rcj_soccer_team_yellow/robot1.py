@@ -42,6 +42,35 @@ class MyRobot1(RCJSoccerRobot):
                 self.target_distance = distannce(self.robot_pos[0], self.robot_pos[1], self.target_x, self.target_y)
                 break
             y -= 0.01
+        
+
+
+        self.send_data_to_team({
+            'id': self.robot_index, 
+            'robot_pos': self.robot_pos, 
+            'ball_x': self.ball_x, 
+            'ball_y': self.ball_y,
+            'is_ball': self.is_ball,
+            'ball_distance': self.ball_distance
+            })
+    def readTeamData(self):
+        while self.is_new_team_data():
+            team_data = self.get_new_team_data()['robot_id']
+            if not self.is_ball and team_data['is_ball']:
+                self.ball_x = team_data['ball_x']
+                self.ball_y = team_data['ball_y']
+                self.is_ball = True
+                self.ball_distance = distannce(self.robot_pos[0], self.robot_pos[1], self.ball_x, self.ball_y)
+            self.robots_poses[team_data['id']-1] = [
+                team_data['robot_pos'][0],
+                team_data['robot_pos'][1],
+                team_data['ball_distance']
+            ]
+        self.robots_poses[self.robot_index-1] = [
+            self.robot_pos[0],
+            self.robot_pos[1],
+            self.ball_distance,
+        ]
     def move(self, target_x, target_y):
         target_angle = math.degrees(math.atan2(self.robot_pos[0] - target_x, target_y - self.robot_pos[1]))
         target_distance = math.sqrt((self.robot_pos[0] - target_x)**2 + (self.robot_pos[1] - target_y)**2)
@@ -86,6 +115,37 @@ class MyRobot1(RCJSoccerRobot):
         if VL < -10: VL = -10
         self.left_motor.setVelocity(VL)
         self.right_motor.setVelocity(VR)
+    def forward_AI(self):
+        if self.target_distance > 0.05 and not self.arrived_to_target:
+            self.move(self.target_x, self.target_y)
+        else:
+            self.arrived_to_target = True
+            self.move(self.ball_x, self.ball_y)
+            if self.ball_distance > 0.2:
+                self.arrived_to_target = False
+    def goalKeeper_AI(self):
+        self.goalkeeper_x = self.ball_x
+        if self.goalkeeper_x > 0.3:
+            self.goalkeeper_x = 0.3
+        if self.goalkeeper_x <-0.3:
+            self.goalkeeper_x = -0.3
+        self.move(self.goalkeeper_x, -0.7)
+    def defineRoll(self):
+        minDist = self.robots_poses[0][2]
+        maxDist = self.robots_poses[0][2]
+        minIndex = 0
+        maxIndex = 0
+        for i in range(3):
+            if self.robots_poses[i][2] < minDist:
+                minDist = self.robots_poses[i][2]
+                minIndex = i
+            if self.robots_poses[i][2] > maxDist:
+                maxDist = self.robots_poses[i][2]
+                maxIndex = i
+        if maxIndex == self.robot_index-1:
+            self.roll = 'goalkeeper'
+        else:
+            self.roll = 'forward'
     def run(self):
         startTime = time.time()
         self.robot_pos = [0, 0]
@@ -101,32 +161,22 @@ class MyRobot1(RCJSoccerRobot):
         self.ball_x = 0
         self.ball_y = 0
         self.form_positions = [[-0.2, -0.3], [0, -0.7], [0.2, -0.3]]
+        self.robots_poses = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+        self.roll = 'forward'
         while self.robot.step(TIME_STEP) != -1:
             if self.is_new_data():  
                 self.readSensors()
+                self.readTeamData()
+                self.defineRoll()
+
                 if self.is_ball:
-                    if self.target_distance > 0.05 and not self.arrived_to_target:
-                        self.move(self.target_x, self.target_y)
-                    else:
-                        self.arrived_to_target = True
-                        self.move(self.ball_x, self.ball_y)
-                        if self.ball_distance > 0.2:
-                            self.arrived_to_target = False
+                    if self.roll == 'forward':
+                        self.forward_AI()
+                    if self.roll == 'goalkeeper':
+                        self.goalKeeper_AI()
                 else:
                     self.move(
                         self.form_positions[self.robot_index - 1][0], 
                         self.form_positions[self.robot_index - 1][1]
                     )
-
-
-
-# Tmrin 12:
-# BBK, agar toop tavasote robot dide shod robot top ra goal konad va dar gheir in soorat be position
-# haye zir beravad
-# robot1 -> (-0.2, -0.3)
-# robot2 -> (   0, -0.7)
-# robot3 -> ( 0.2, -0.3)
-
-# tamrin 13:
-# BBK, robot az har 2 jahat betavanad be samte target beravad
 
