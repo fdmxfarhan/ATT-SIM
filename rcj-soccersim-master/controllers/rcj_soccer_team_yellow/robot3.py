@@ -116,7 +116,11 @@ class MyRobot3(RCJSoccerRobot):
         self.left_motor.setVelocity(VL)
         self.right_motor.setVelocity(VR)
     def forward_AI(self):
-        if self.target_distance > 0.05 and not self.arrived_to_target:
+        if self.is_ball_moving and not self.arrived_to_target:
+            self.move(self.ball_x_pred, self.ball_y_pred)
+            if self.ball_distance < 0.2:
+                self.arrived_to_target = True
+        elif self.target_distance > 0.05 and not self.arrived_to_target:
             self.move(self.target_x, self.target_y)
         else:
             self.arrived_to_target = True
@@ -147,14 +151,26 @@ class MyRobot3(RCJSoccerRobot):
         else:
             self.roll = 'forward'
     def predictBallFuturePos(self):
-        ball_speed = distannce(self.ball_x, self.ball_y, self.last_ball_x, self.last_ball_y)*1000#/(time.time() - self.last_ball_update_time)
-        if ball_speed > 1:
-            self.is_ball_moving = True
-        else:
-            self.is_ball_moving = False
-        print(self.is_ball_moving)
+        delta_time = time.time() - self.last_ball_update_time
+        if delta_time > 0.1: 
+            delta_x = self.ball_x - self.last_ball_x
+            delta_y = self.ball_y - self.last_ball_y
 
-        if self.is_ball:
+            ball_vx = delta_x/delta_time
+            ball_vy = delta_y/delta_time
+            ball_v = math.sqrt(ball_vx**2 + ball_vy**2)
+            print(f'vx: {round(ball_vx,2)},\t vy: {round(ball_vy,2)},\t v: {round(ball_v,2)}')
+        
+            if time.time() - self.predict_time > 3.0:
+                self.ball_x_pred = self.ball_x + ball_vx*3.0
+                self.ball_y_pred = self.ball_y + ball_vy*3.0
+                self.predict_time = time.time()
+
+            if ball_v > 0.01:
+                self.is_ball_moving = True
+            else:
+                self.is_ball_moving = False
+
             self.last_ball_x = self.ball_x
             self.last_ball_y = self.ball_y
             self.last_ball_update_time = time.time()
@@ -179,6 +195,9 @@ class MyRobot3(RCJSoccerRobot):
         self.last_ball_y  = 0
         self.is_ball_moving = False
         self.last_ball_update_time = time.time()
+        self.predict_time = time.time()
+        self.ball_x_pred = 0
+        self.ball_y_pred = 0
         while self.robot.step(TIME_STEP) != -1:
             if self.is_new_data():  
                 self.readSensors()
