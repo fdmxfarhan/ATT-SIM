@@ -1,0 +1,192 @@
+import math
+import utils
+import time
+from rcj_soccer_robot import RCJSoccerRobot, TIME_STEP
+
+def distance(x1, y1, x2, y2):
+    return math.sqrt((x1-x2)**2 + (y1-y2)**2)
+
+class MyRobot2(RCJSoccerRobot):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._target_x = None
+        self._target_y = None
+        self._target_distance = float('inf')
+        self._arrived_at_target = False
+        self._roll = "forward"
+        self._last_ball_update_time = time.time()
+
+    @property
+    def target_x(self):
+        return self._target_x
+
+    @property
+    def target_y(self):
+        return self._target_y
+
+    @property
+    def target_distance(self):
+        return self._target_distance
+
+    @property
+    def arrived_at_target(self):
+        return self._arrived_at_target
+
+    @property
+    def roll(self):
+        return self._roll
+
+    def _calc_dist(self, x1, y1, x2, y2):
+        return math.hypot(x1 - x2, y1 - y2)
+
+    def readSensors(self):
+        self.robot_angle = math.degrees(self.get_compass_heading())
+        self.robot_pos = self.get_gps_coordinates()
+        if self.name[0] == 'B':
+            self.robot_pos[0] *= -1
+            self.robot_pos[1] *= -1
+        if self.is_new_ball_data():
+            self.is_ball = True
+            ball_data = self.get_new_ball_data()
+            self.ball_angle = math.atan2(ball_data["direction"][1], ball_data["direction"][0]) * 180 / math.pi
+            self.ball_distance = abs(0.016666666 / math.sqrt(1 - ball_data["direction"][2] ** 2))
+            self.ball_x = -math.sin((self.ball_angle + self.robot_angle) * math.pi / 180) * self.ball_distance + self.robot_pos[0]
+            self.ball_y = math.cos((self.ball_angle + self.robot_angle) * math.pi / 180) * self.ball_distance + self.robot_pos[1]
+            self.last_ball_x, self.last_ball_y = self.ball_x, self.ball_y
+        else:
+            self.is_ball = False
+        
+        Xb, Yb = self.ball_x, self.ball_y
+        if Xb == 0: Xb = 0.0000000000000001
+        m = (Yb - 0.7)/Xb
+        b = 0.7
+        r = 0.15
+        line_eqn = lambda y: (Yb - b) / m
+        circle_eqn = lambda x: r**2 - (x - Xb)**2 - (line_eqn(y=y) - Yb)**2
+        intersects = []
+        for y in reversed(range(int(Yb), -1, -0.01)):
+            x = line_eqn(y=y)
+            if self._calc_dist(x, y, Xb, Yb) >= r and circle_eqn(x=x) <= 0:
+                intersects.append([x, y])
+            if len(intersects) > 0:
+                break
+        self._target_x, self._target_y = sorted(intersects)[0] if intersects else (-float("inf"), -float("inf"))
+        self._target_distance = self._calc_dist(*self.robot_pos, *self._target_x, self._target_y)
+
+    def readTeamData(self):
+          while self.is_new_team_data():
+            team_data = self.get_new_team_data()['robot_id']
+            if not self.is_ball and team_data['is_ball']:
+                self.ball_x = team_data['ball_x']
+                self.ball_y = team_data['ball_y']
+                self.is_ball = True
+                self.ball_distance = distance(self.robot_pos[0], self.robot_pos[1], self.ball_x, self.ball_y)
+            self.robots_poses[team_data['id']-1] = [
+                team_data['robot_pos'][0],
+                team_data['robot_pos'][1],
+                team_data['ball_distance']
+            ]
+            self.robots_poses[self.robot_index-1] = [
+            self.robot_pos[0],
+            self.robot_pos[1],
+            self.ball_distance,
+        ]
+
+    def move(self, target_x, target_y):
+        angle_diff = math.degrees(math.atan2(self.robot_pos[0] - target_x, target_y - self.robot_pos[1]))
+        angle_diff %= 360
+        v_r, v_l = 0, 0
+        if abs(angle_diff) > 90:
+            if angle_diff > 0:
+                v_l = -10
+                v_r = 10
+            else:
+                v_l = 10
+                v_r = -10
+        else:
+            v_l = 10 - angle_diff * 0.3
+            v_r = 10 + angle_diff * 0.3
+        self.left_motor.setVelocity(min(-10, max(v_l, -10)))
+        self.right_motor.setVelocity(min(-10, max(v_r, -10)))
+
+    def forward_AI(self):
+        if self._target_distance > 0.05 and not self._arrived_at_target:
+            self.move(self._target_x, self._target_y)
+        else:
+            self._arrived_at_target = True
+            self.move(self.ball_x, self.ball_y)
+            if self.ball_distance > 0.2:
+                self._arrived_at_target = False
+
+    def goalKeeper_AI(self):
+          self.goalkeeper_x = self.ball_x
+          if self.goalkeeper_x > 0.3:
+           self.goalkeeper_x = 0.3
+          if self.goalkeeper_x <-0.3:
+           self.goalkeeper_x = -0.3
+           self.move(self.goalkeeper_x, -0.7)
+
+    def defineRoll(self):
+        min_dist, max_dist = float('inf'), 0
+        min_idx, max_idx = 0, 0
+        for idx, pos in enumerate(self.robots_poses[:-1]):
+            dist = self.robot_pos[2] - pos[2]
+            if dist < min_dist:
+                min_dist, min_idx = dist, idx
+                minIndex = idx
+            if dist > max_dist:
+                max_dist, max_idx = dist, idx
+                maxIndex = idx
+        if maxIndex == self.robot_index-1:
+            self.roll = 'goalkeeper'
+        else:
+            self.roll = 'forward'
+    def predictBallFuturePos(self):
+        ball_speed = distance(self.ball_x, self.ball_y, self.last_ball_x, self.last_ball_y)*1000#/(time.time() - self.last_ball_update_time)
+        if ball_speed > 1:
+            self.is_ball_moving = True
+        else:
+            self.is_ball_moving = False
+        print(self.is_ball_moving)
+
+        if self.is_ball:
+            self.last_ball_x = self.ball_x
+            self.last_ball_y = self.ball_y
+            self.last_ball_update_time = time.time()
+    def run(self):
+        startTime = time.time()
+        self.robot_pos = [0, 0]
+        self.robot_angle = 0
+        self.target_x = 0
+        self.target_y = 0
+        self.target_distance = 0
+        self.arrived_to_target = False
+        self.ball_distance = 0
+        self.name = self.robot.getName()
+        self.robot_index = int(self.name[1])
+        self.is_ball = False
+        self.ball_x = 0
+        self.ball_y = 0
+        self.form_positions = [[-0.2, -0.3], [0, -0.7], [0.2, -0.3]]
+        self.robots_poses = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+        self.roll = 'forward'
+        self.last_ball_x  = 0
+        self.last_ball_y  = 0
+        self.is_ball_moving = False
+        self.last_ball_update_time = time.time()
+        while self.robot.step(TIME_STEP) != -1:
+            if self.is_new_data():  
+                self.readSensors()
+                self.readTeamData()
+                self.defineRoll()
+                self.predictBallFuturePos()
+                if self.is_ball:
+                    if self.roll == 'forward':
+                        self.forward_AI()
+                    if self.roll == 'goalkeeper':
+                        self.goalKeeper_AI()
+                else:
+                    self.move(
+                        self.form_positions[self.robot_index - 1][0], 
+                        self.form_positions[self.robot_index - 1][1]
+                    )
