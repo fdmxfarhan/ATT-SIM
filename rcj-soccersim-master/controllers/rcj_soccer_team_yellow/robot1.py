@@ -146,6 +146,18 @@ class MyRobot1(RCJSoccerRobot):
             self.roll = 'goalkeeper'
         else:
             self.roll = 'forward'
+    def predictBallFuturePos(self):
+        ball_speed = distannce(self.ball_x, self.ball_y, self.last_ball_x, self.last_ball_y)*1000#/(time.time() - self.last_ball_update_time)
+        if ball_speed > 1:
+            self.is_ball_moving = True
+        else:
+            self.is_ball_moving = False
+        # print(self.is_ball_moving)
+
+        if self.is_ball:
+            self.last_ball_x = self.ball_x
+            self.last_ball_y = self.ball_y
+            self.last_ball_update_time = time.time()
     def run(self):
         startTime = time.time()
         self.robot_pos = [0, 0]
@@ -163,12 +175,16 @@ class MyRobot1(RCJSoccerRobot):
         self.form_positions = [[-0.2, -0.3], [0, -0.7], [0.2, -0.3]]
         self.robots_poses = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
         self.roll = 'forward'
+        self.last_ball_x  = 0
+        self.last_ball_y  = 0
+        self.is_ball_moving = False
+        self.last_ball_update_time = time.time()
         while self.robot.step(TIME_STEP) != -1:
             if self.is_new_data():  
                 self.readSensors()
                 self.readTeamData()
                 self.defineRoll()
-
+                self.predictBallFuturePos()
                 if self.is_ball:
                     if self.roll == 'forward':
                         self.forward_AI()
