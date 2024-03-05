@@ -6,7 +6,7 @@ from rcj_soccer_robot import RCJSoccerRobot, TIME_STEP
 def distannce(x1, y1, x2, y2):
     return math.sqrt((x1-x2)**2 + (y1-y2)**2)
 
-class MyRobot2(RCJSoccerRobot):
+class MyRobot1(RCJSoccerRobot):
     def readSensors(self):
         self.robot_angle = math.degrees(self.get_compass_heading())
         self.robot_pos = self.get_gps_coordinates()
@@ -81,7 +81,7 @@ class MyRobot2(RCJSoccerRobot):
         VR = 0
         VL = 0
         if diff > -90 and diff < 90:
-            if target_distance < 0.05:
+            if target_distance < 0.05: 
                 VR = 0
                 VL = 0
             elif diff > 30:
@@ -188,7 +188,7 @@ class MyRobot2(RCJSoccerRobot):
         self.is_ball = False
         self.ball_x = 0
         self.ball_y = 0
-        self.form_positions = [[-0.4, -0.2], [0, -0.7], [0.4, -0.2]]
+        self.form_positions =[[-0.4, -0.2], [0, -0.7], [0.4, -0.2]]
         self.robots_poses = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
         self.roll = 'forward'
         self.last_ball_x  = 0
