@@ -116,10 +116,15 @@ class MyRobot1(RCJSoccerRobot):
         self.left_motor.setVelocity(VL)
         self.right_motor.setVelocity(VR)
     def forward_AI(self):
-        if self.is_ball_moving and not self.arrived_to_target:
-            self.move(self.ball_x_pred, self.ball_y_pred)
-            if self.ball_distance < 0.2:
-                self.arrived_to_target = True
+        if self.robot_pos[1] > self.ball_y and self.robot_pos[0] > self.ball_x-0.2 and self.robot_pos[0] < self.ball_x+0.2:
+            if self.robot_pos[0] > self.ball_x:
+                self.move(self.ball_x+0.2, self.ball_y-0.1)
+            else:
+                self.move(self.ball_x-0.2, self.ball_y-0.1)
+        # elif self.is_ball_moving and not self.arrived_to_target:
+        #     self.move(self.ball_x_pred, self.ball_y_pred)
+        #     if self.ball_distance < 0.2:
+        #         self.arrived_to_target = True
         elif self.target_distance > 0.05 and not self.arrived_to_target:
             self.move(self.target_x, self.target_y)
         else:
@@ -159,7 +164,7 @@ class MyRobot1(RCJSoccerRobot):
             ball_vx = delta_x/delta_time
             ball_vy = delta_y/delta_time
             ball_v = math.sqrt(ball_vx**2 + ball_vy**2)
-            print(f'vx: {round(ball_vx,2)},\t vy: {round(ball_vy,2)},\t v: {round(ball_v,2)}')
+            # print(f'vx: {round(ball_vx,2)},\t vy: {round(ball_vy,2)},\t v: {round(ball_v,2)}')
         
             if time.time() - self.predict_time > 3.0:
                 self.ball_x_pred = self.ball_x + ball_vx*3.0
