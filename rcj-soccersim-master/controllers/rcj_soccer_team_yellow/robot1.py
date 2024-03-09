@@ -5,8 +5,7 @@ from rcj_soccer_robot import RCJSoccerRobot, TIME_STEP
 
 def distannce(x1, y1, x2, y2):
     return math.sqrt((x1-x2)**2 + (y1-y2)**2)
-def sortArr(arr):
-    return 
+
 class MyRobot1(RCJSoccerRobot):
     def readSensors(self):
         self.robot_angle = math.degrees(self.get_compass_heading())
@@ -193,13 +192,25 @@ class MyRobot1(RCJSoccerRobot):
         # 1. ye for minevisism ke faseleye har yek az nutral_poses[i] ha ra az toop hesab konad
         for i in range(len(nutral_poses)):
             nutral_poses[i][2] = distannce(nutral_poses[i][0], nutral_poses[i][1], self.ball_x, self.ball_y)
+        
         # 2. ye for dige ham minevisim ke nutral_poses ra bar asas fasele az toop az kochik be bozorg moratab konad
-        # ravesh 1: chat gpt: i want to sort this array by each elemets 3rd value as the key
-        # ravesh 2: bubble sort
+        sorted_nutral_poses = sorted(nutral_poses, key=lambda x: x[2])
+        unoccupied_sorted_nutral_poses = []
         
         # 3. ye for dige ham minevisim ke nutral_poses[i] hayi ke eshghal shodeand hazf shavand
+        for i in range(len(sorted_nutral_poses)):
+            is_occupied = False
+            for j in range(len(self.robots_poses)):
+                if distannce(self.robots_poses[j][0], self.robots_poses[j][1], sorted_nutral_poses[i][0], sorted_nutral_poses[i][1]) < 0.08:
+                    is_occupied = True
+            if distannce(sorted_nutral_poses[i][0], sorted_nutral_poses[i][1], self.ball_x, self.ball_y) < 0.08:
+                is_occupied = True
+            if not is_occupied:
+                unoccupied_sorted_nutral_poses.append(sorted_nutral_poses[i])
+        
+        
         # 4. nazdik tarin noghte khonsaye eshghal nashode return shavad
-
+        return unoccupied_sorted_nutral_poses
     def run(self):
         startTime = time.time()
         self.robot_pos = [0, 0]
@@ -242,3 +253,5 @@ class MyRobot1(RCJSoccerRobot):
                         self.form_positions[self.robot_index - 1][1]
                     )
 
+# taklif: Barname ei benevisid ke agar toop be modate 3 sanye sabet bood yek robot be nazdik tarin noghte khonsa va ba hefze
+# fasele (0.08) beravad va montazere lack of progress shavad.
