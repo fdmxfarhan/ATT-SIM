@@ -5,7 +5,8 @@ from rcj_soccer_robot import RCJSoccerRobot, TIME_STEP
 
 def distannce(x1, y1, x2, y2):
     return math.sqrt((x1-x2)**2 + (y1-y2)**2)
-
+def sortArr(arr):
+    return 
 class MyRobot1(RCJSoccerRobot):
     def readSensors(self):
         self.robot_angle = math.degrees(self.get_compass_heading())
@@ -179,7 +180,7 @@ class MyRobot1(RCJSoccerRobot):
             self.last_ball_x = self.ball_x
             self.last_ball_y = self.ball_y
             self.last_ball_update_time = time.time()
-    def findNutralSpot():
+    def findNutralSpot(self):
         nutral_poses = [
             [0, 0, 0],
             [-0.3, -0.3, 0],
@@ -190,7 +191,12 @@ class MyRobot1(RCJSoccerRobot):
             [-0.3, 0.3, 0],
         ]
         # 1. ye for minevisism ke faseleye har yek az nutral_poses[i] ha ra az toop hesab konad
+        for i in range(len(nutral_poses)):
+            nutral_poses[i][2] = distannce(nutral_poses[i][0], nutral_poses[i][1], self.ball_x, self.ball_y)
         # 2. ye for dige ham minevisim ke nutral_poses ra bar asas fasele az toop az kochik be bozorg moratab konad
+        # ravesh 1: chat gpt: i want to sort this array by each elemets 3rd value as the key
+        # ravesh 2: bubble sort
+        
         # 3. ye for dige ham minevisim ke nutral_poses[i] hayi ke eshghal shodeand hazf shavand
         # 4. nazdik tarin noghte khonsaye eshghal nashode return shavad
 
