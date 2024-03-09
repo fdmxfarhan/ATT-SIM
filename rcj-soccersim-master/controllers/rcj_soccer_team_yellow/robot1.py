@@ -179,6 +179,21 @@ class MyRobot1(RCJSoccerRobot):
             self.last_ball_x = self.ball_x
             self.last_ball_y = self.ball_y
             self.last_ball_update_time = time.time()
+    def findNutralSpot():
+        nutral_poses = [
+            [0, 0, 0],
+            [-0.3, -0.3, 0],
+            [0, -0.2, 0],
+            [0.3, -0.3, 0],
+            [0.3, 0.3, 0],
+            [0, 0.2, 0],
+            [-0.3, 0.3, 0],
+        ]
+        # 1. ye for minevisism ke faseleye har yek az nutral_poses[i] ha ra az toop hesab konad
+        # 2. ye for dige ham minevisim ke nutral_poses ra bar asas fasele az toop az kochik be bozorg moratab konad
+        # 3. ye for dige ham minevisim ke nutral_poses[i] hayi ke eshghal shodeand hazf shavand
+        # 4. nazdik tarin noghte khonsaye eshghal nashode return shavad
+
     def run(self):
         startTime = time.time()
         self.robot_pos = [0, 0]
@@ -209,6 +224,7 @@ class MyRobot1(RCJSoccerRobot):
                 self.readTeamData()
                 self.defineRoll()
                 self.predictBallFuturePos()
+                self.findNutralSpot()
                 if self.is_ball:
                     if self.roll == 'forward':
                         self.forward_AI()
