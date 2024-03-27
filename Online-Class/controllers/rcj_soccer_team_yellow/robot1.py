@@ -182,6 +182,11 @@ class MyRobot1(RCJSoccerRobot):
                 self.arrived_to_target = False
     def goalKeeper_AI(self):
         self.goalkeeper_x = self.ball_x
+        if (self.last_3sec_ball_x - self.ball_x) != 0:
+            m = (self.last_ball_y - self.ball_y)/(self.last_3sec_ball_x - self.ball_x)
+            b = self.ball_y - m * self.ball_x
+            if(m != 0):
+                self.goalkeeper_x = (-0.7 - b) / m
         if self.goalkeeper_x > 0.3:
             self.goalkeeper_x = 0.3
         if self.goalkeeper_x <-0.3:
