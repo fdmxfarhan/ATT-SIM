@@ -1,6 +1,7 @@
 import math
 import utils
 import time
+import pygame
 from rcj_soccer_robot import RCJSoccerRobot, TIME_STEP
 
 def distance(x1, y1, x2, y2):
@@ -171,10 +172,10 @@ class MyRobot1(RCJSoccerRobot):
                 self.move(self.ball_x+0.2, self.ball_y-0.1)
             else:
                 self.move(self.ball_x-0.2, self.ball_y-0.1)
-        # elif self.is_ball_moving and not self.arrived_to_target:
-        #     self.move(self.ball_x_pred, self.ball_y_pred)
-        #     if self.ball_distance < 0.2:
-        #         self.arrived_to_target = True
+        elif self.is_ball_moving and self.last_ball_y > self.ball_y and not self.arrived_to_target:
+            self.move(self.ball_x_pred, self.ball_y_pred)
+            if self.ball_distance < 0.2:
+                self.arrived_to_target = True
 
         # agar be noghte poshte toop narisidi aval boro oonja
         elif self.target_distance > 0.05 and not self.arrived_to_target:
@@ -239,16 +240,19 @@ class MyRobot1(RCJSoccerRobot):
         self.ball_move_angle = math.degrees(math.atan2(LBX - BX, LBY - BY))
         if self.ball_move_angle < 0: self.ball_move_angle += 360
         
-        if time.time() - self.predict_time > 0.3:
+        if self.ball_move_dir_changed == True and self.is_ball_moving:
+            self.ball_x_pred = BX - 0.3
+            self.ball_y_pred = self.ball_move_m * self.ball_x_pred + self.ball_move_b
+            self.ball_move_dir_changed = False
+
+        if time.time() - self.predict_time > 0.9:
             ball_v = distance(LBX, LBY, BX, BY)/0.3
-            if self.robot_index == 1: 
-                print(math.fabs(self.last_ball_move_angle - self.ball_move_angle))
 
             if math.fabs(self.last_ball_move_angle - self.ball_move_angle) > 20:
-                self.ball_move_dir_changed = True
                 if LBX - BX != 0: 
                     self.ball_move_m = (LBY - BY)/(LBX - BX)
                 self.ball_move_b = BY - self.ball_move_m * BX
+                self.ball_move_dir_changed = True
 
             if ball_v > 0.1:
                 self.is_ball_moving = True
@@ -380,28 +384,48 @@ class MyRobot1(RCJSoccerRobot):
         self.ball_move_dir_changed = False
         self.ball_move_m = 0
         self.ball_move_b = 0
+        pygame.init()
+        display = pygame.display.set_mode((300, 300))
+
         while self.robot.step(TIME_STEP) != -1:
-            if self.is_new_data():  
-                self.readSensors()
-                self.readTeamData()
-                self.checkLackOfProgress()
-                self.defineRoll()
-                self.predictBallFuturePos()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+            keys=pygame.key.get_pressed()
+            if keys[pygame.K_w]:
+                self.left_motor.setVelocity(10)
+                self.right_motor.setVelocity(10)
+            if keys[pygame.K_s]:
+                self.left_motor.setVelocity(-10)
+                self.right_motor.setVelocity(-10)
+            if keys[pygame.K_d]:
+                self.left_motor.setVelocity(-10)
+                self.right_motor.setVelocity(10)
+            if keys[pygame.K_a]:
+                self.left_motor.setVelocity(10)
+                self.right_motor.setVelocity(-10)
+            
+            # if self.is_new_data():  
+            #     self.readSensors()
+            #     self.readTeamData()
+            #     self.checkLackOfProgress()
+            #     self.defineRoll()
+            #     self.predictBallFuturePos()
                 
 
-                if self.is_ball:
-                    if self.lack_of_progress:
-                        self.LackOfProgress_AI()
-                    elif self.roll == 'forward':
-                        self.forward_AI()
-                    elif self.roll == 'goalkeeper':
-                        self.goalKeeper_AI()
-                else:
-                    self.moveAndLookAt(
-                        self.form_positions[self.robot_index - 1][0], 
-                        self.form_positions[self.robot_index - 1][1],
-                        self.form_positions[self.robot_index - 1][0], 0.7
-                    )
+            #     if self.is_ball:
+            #         if self.lack_of_progress:
+            #             self.LackOfProgress_AI()
+            #         elif self.roll == 'forward':
+            #             self.forward_AI()
+            #         elif self.roll == 'goalkeeper':
+            #             self.goalKeeper_AI()
+            #     else:
+            #         self.moveAndLookAt(
+            #             self.form_positions[self.robot_index - 1][0], 
+            #             self.form_positions[self.robot_index - 1][1],
+            #             self.form_positions[self.robot_index - 1][0], 0.7
+            #         )
 
 # taklif: Barname ei benevisid ke agar toop be modate 3 sanye sabet bood yek robot be nazdik tarin noghte khonsa va ba hefze
 # fasele (0.08) beravad va montazere lack of progress shavad.
