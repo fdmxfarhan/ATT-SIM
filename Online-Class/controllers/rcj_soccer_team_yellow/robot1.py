@@ -71,7 +71,6 @@ class MyRobot1(RCJSoccerRobot):
             self.ball_distance,
         ]
     def move(self, target_x, target_y):
-        return
         target_angle = math.degrees(math.atan2(self.robot_pos[0] - target_x, target_y - self.robot_pos[1]))
         target_distance = math.sqrt((self.robot_pos[0] - target_x)**2 + (self.robot_pos[1] - target_y)**2)
         diff = self.robot_angle - target_angle
