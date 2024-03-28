@@ -71,6 +71,7 @@ class MyRobot1(RCJSoccerRobot):
             self.ball_distance,
         ]
     def move(self, target_x, target_y):
+        return
         target_angle = math.degrees(math.atan2(self.robot_pos[0] - target_x, target_y - self.robot_pos[1]))
         target_distance = math.sqrt((self.robot_pos[0] - target_x)**2 + (self.robot_pos[1] - target_y)**2)
         diff = self.robot_angle - target_angle
@@ -161,7 +162,12 @@ class MyRobot1(RCJSoccerRobot):
         self.right_motor.setVelocity(VR)
     def forward_AI(self):
         # zamani ke robot jelo tar az toop bashe (jelo giri az goal be khodi)
-        if self.robot_pos[1] > self.ball_y and self.robot_pos[0] > self.ball_x-0.2 and self.robot_pos[0] < self.ball_x+0.2:
+        if self.ball_y < -0.65 and (self.ball_x > 0.3 or self.ball_x < -0.3):
+            if self.ball_x > 0.3:
+                self.move(self.ball_x-0.02, self.ball_y)
+            elif self.ball_x < -0.3:
+                self.move(self.ball_x+0.02, self.ball_y)
+        elif self.robot_pos[1] > self.ball_y and self.robot_pos[0] > self.ball_x-0.2 and self.robot_pos[0] < self.ball_x+0.2:
             if self.robot_pos[0] > self.ball_x:
                 self.move(self.ball_x+0.2, self.ball_y-0.1)
             else:
@@ -182,7 +188,7 @@ class MyRobot1(RCJSoccerRobot):
                 self.arrived_to_target = False
     def goalKeeper_AI(self):
         self.goalkeeper_x = self.ball_x
-        if (self.last_3sec_ball_x - self.ball_x) != 0:
+        if (self.last_3sec_ball_x - self.ball_x) != 0 and self.last_ball_y > self.ball_y:
             m = (self.last_ball_y - self.ball_y)/(self.last_3sec_ball_x - self.ball_x)
             b = self.ball_y - m * self.ball_x
             if(m != 0):
@@ -195,7 +201,10 @@ class MyRobot1(RCJSoccerRobot):
     def LackOfProgress_AI(self):
         nutralSpot = self.findNutralSpot()[0]
         if self.roll == 'goalkeeper':
-            self.moveAndLookAt(0, -0.35, 0, 0.7)
+            if self.ball_y > 0:
+                self.moveAndLookAt(0, -0.18, 0, 0.7)
+            else:
+                self.moveAndLookAt(0, -0.38, 0, 0.7)
         elif self.is_closest_robot_to_ball:
             self.move(self.ball_x, self.ball_y)
         else:
@@ -222,29 +231,58 @@ class MyRobot1(RCJSoccerRobot):
         else:
             self.is_closest_robot_to_ball = False
     def predictBallFuturePos(self):
-        delta_time = time.time() - self.last_ball_update_time
-        if delta_time > 0.1: 
-            delta_x = self.ball_x - self.last_ball_x
-            delta_y = self.ball_y - self.last_ball_y
-
-            ball_vx = delta_x/delta_time
-            ball_vy = delta_y/delta_time
-            ball_v = math.sqrt(ball_vx**2 + ball_vy**2)
-            # print(f'vx: {round(ball_vx,2)},\t vy: {round(ball_vy,2)},\t v: {round(ball_v,2)}')
+        LBX = self.last_ball_x
+        LBY = self.last_ball_y
+        BX = self.ball_x
+        BY = self.ball_y
         
-            if time.time() - self.predict_time > 3.0:
-                self.ball_x_pred = self.ball_x + ball_vx*3.0
-                self.ball_y_pred = self.ball_y + ball_vy*3.0
-                self.predict_time = time.time()
+        ########### Mohasebe zavie harekat toop
+        self.ball_move_angle = math.degrees(math.atan2(LBX - BX, LBY - BY))
+        if self.ball_move_angle < 0: self.ball_move_angle += 360
+        
+        if time.time() - self.predict_time > 0.3:
+            ball_v = distance(LBX, LBY, BX, BY)/0.3
+            if self.robot_index == 1: 
+                print(math.fabs(self.last_ball_move_angle - self.ball_move_angle))
 
-            if ball_v > 0.01:
+            if math.fabs(self.last_ball_move_angle - self.ball_move_angle) > 20:
+                self.ball_move_dir_changed = True
+                if LBX - BX != 0: 
+                    self.ball_move_m = (LBY - BY)/(LBX - BX)
+                self.ball_move_b = BY - self.ball_move_m * BX
+
+            if ball_v > 0.1:
                 self.is_ball_moving = True
             else:
                 self.is_ball_moving = False
-
             self.last_ball_x = self.ball_x
             self.last_ball_y = self.ball_y
-            self.last_ball_update_time = time.time()
+            self.last_ball_move_angle = self.ball_move_angle
+            self.predict_time = time.time()
+
+        # delta_time = time.time() - self.last_ball_update_time
+        # if delta_time > 0.1: 
+        #     delta_x = self.ball_x - self.last_ball_x
+        #     delta_y = self.ball_y - self.last_ball_y
+
+        #     ball_vx = delta_x/delta_time
+        #     ball_vy = delta_y/delta_time
+        #     ball_v = math.sqrt(ball_vx**2 + ball_vy**2)
+        #     # print(f'vx: {round(ball_vx,2)},\t vy: {round(ball_vy,2)},\t v: {round(ball_v,2)}')
+        
+        #     if time.time() - self.predict_time > 3.0:
+        #         self.ball_x_pred = self.ball_x + ball_vx*3.0
+        #         self.ball_y_pred = self.ball_y + ball_vy*3.0
+        #         self.predict_time = time.time()
+
+        #     if ball_v > 0.01:
+        #         self.is_ball_moving = True
+        #     else:
+        #         self.is_ball_moving = False
+
+        #     self.last_ball_x = self.ball_x
+        #     self.last_ball_y = self.ball_y
+        #     self.last_ball_update_time = time.time()
     def findNutralSpot(self):
         nutral_poses = [
             # [0, 0, 0],
@@ -297,7 +335,7 @@ class MyRobot1(RCJSoccerRobot):
         m = (Yb - 0.7)/Xb
         b = 0.7
         # Circle Equation
-        r = 0.15
+        r = 0.18
 
         # Intersection of Line and Circle
         y = Yb
@@ -338,6 +376,11 @@ class MyRobot1(RCJSoccerRobot):
         self.last_3sec_ball_x = 0
         self.last_3sec_ball_y = 0
         self.is_closest_robot_to_ball = False
+        self.ball_move_angle = 0
+        self.last_ball_move_angle = 0
+        self.ball_move_dir_changed = False
+        self.ball_move_m = 0
+        self.ball_move_b = 0
         while self.robot.step(TIME_STEP) != -1:
             if self.is_new_data():  
                 self.readSensors()
