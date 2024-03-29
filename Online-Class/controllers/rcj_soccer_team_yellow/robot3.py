@@ -315,25 +315,25 @@ class MyRobot3(RCJSoccerRobot):
                 self.predictBallFuturePos()
                 
 
-                if self.is_ball:
-                    if self.lack_of_progress:
-                        nutralSpot = self.findNutralSpot()[0]
-                        if self.roll == 'goalkeeper':
-                            self.moveAndLookAt(0, -0.35, 0, 0.7)
-                        elif self.is_closest_robot_to_ball:
-                            self.move(self.ball_x, self.ball_y)
-                        else:
-                            self.move(nutralSpot[0], nutralSpot[1]-0.15)
-                    elif self.roll == 'forward':
-                        self.forward_AI()
-                    elif self.roll == 'goalkeeper':
-                        self.goalKeeper_AI()
-                else:
-                    self.moveAndLookAt(
-                        self.form_positions[self.robot_index - 1][0], 
-                        self.form_positions[self.robot_index - 1][1],
-                        self.form_positions[self.robot_index - 1][0], 0.7
-                    )
+                # if self.is_ball:
+                #     if self.lack_of_progress:
+                #         nutralSpot = self.findNutralSpot()[0]
+                #         if self.roll == 'goalkeeper':
+                #             self.moveAndLookAt(0, -0.35, 0, 0.7)
+                #         elif self.is_closest_robot_to_ball:
+                #             self.move(self.ball_x, self.ball_y)
+                #         else:
+                #             self.move(nutralSpot[0], nutralSpot[1]-0.15)
+                #     elif self.roll == 'forward':
+                #         self.forward_AI()
+                #     elif self.roll == 'goalkeeper':
+                #         self.goalKeeper_AI()
+                # else:
+                #     self.moveAndLookAt(
+                #         self.form_positions[self.robot_index - 1][0], 
+                #         self.form_positions[self.robot_index - 1][1],
+                #         self.form_positions[self.robot_index - 1][0], 0.7
+                #     )
 
 # taklif: Barname ei benevisid ke agar toop be modate 3 sanye sabet bood yek robot be nazdik tarin noghte khonsa va ba hefze
 # fasele (0.08) beravad va montazere lack of progress shavad.

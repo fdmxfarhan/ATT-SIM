@@ -1,7 +1,7 @@
 import math
 import utils
 import time
-import pygame
+# import pygame
 from rcj_soccer_robot import RCJSoccerRobot, TIME_STEP
 
 def distance(x1, y1, x2, y2):
@@ -161,19 +161,22 @@ class MyRobot1(RCJSoccerRobot):
         self.left_motor.setVelocity(VL)
         self.right_motor.setVelocity(VR)
     def forward_AI(self):
-        # zamani ke robot jelo tar az toop bashe (jelo giri az goal be khodi)
+        # baraye zamani ke toop mire gooshe haye zamin kenare darvaze khodemoon.
         if self.ball_y < -0.65 and (self.ball_x > 0.3 or self.ball_x < -0.3):
             if self.ball_x > 0.3:
                 self.move(self.ball_x-0.02, self.ball_y)
             elif self.ball_x < -0.3:
                 self.move(self.ball_x+0.02, self.ball_y)
+        # zamani ke robot jelo tar az toop bashe (jelo giri az goal be khodi)
         elif self.robot_pos[1] > self.ball_y and self.robot_pos[0] > self.ball_x-0.2 and self.robot_pos[0] < self.ball_x+0.2:
             if self.robot_pos[0] > self.ball_x:
                 self.move(self.ball_x+0.2, self.ball_y-0.1)
             else:
                 self.move(self.ball_x-0.2, self.ball_y-0.1)
-        elif self.is_ball_moving and self.last_ball_y > self.ball_y and not self.arrived_to_target:
-            self.move(self.ball_x_pred, self.ball_y_pred)
+        # zamani ke toop dar hale harekat bashe robot position nahayi toop ro pish bini mikone
+        elif self.is_ball_moving and not self.arrived_to_target:
+            target = self.findTargetTwardGoal(self.ball_x_pred, self.ball_y_pred)
+            self.moveAndLookAt(target[0], target[1], 0, 0.7)
             if self.ball_distance < 0.2:
                 self.arrived_to_target = True
 
@@ -202,9 +205,9 @@ class MyRobot1(RCJSoccerRobot):
         nutralSpot = self.findNutralSpot()[0]
         if self.roll == 'goalkeeper':
             if self.ball_y > 0:
-                self.moveAndLookAt(0, -0.18, 0, 0.7)
+                self.moveAndLookAt(0, -0.05, 0, 0.7)
             else:
-                self.moveAndLookAt(0, -0.38, 0, 0.7)
+                self.moveAndLookAt(0, -0.45, 0, 0.7)
         elif self.is_closest_robot_to_ball:
             self.move(self.ball_x, self.ball_y)
         else:
@@ -237,16 +240,27 @@ class MyRobot1(RCJSoccerRobot):
         BY = self.ball_y
         
         ########### Mohasebe zavie harekat toop
-        self.ball_move_angle = math.degrees(math.atan2(LBX - BX, LBY - BY))
-        if self.ball_move_angle < 0: self.ball_move_angle += 360
+        if self.is_ball and self.is_ball_moving:
+            self.ball_move_angle = math.degrees(math.atan2(LBX - BX, LBY - BY))
+            if self.ball_move_angle < 0: self.ball_move_angle += 360
+        
         
         if self.ball_move_dir_changed == True and self.is_ball_moving:
-            self.ball_x_pred = BX - 0.3
-            self.ball_y_pred = self.ball_move_m * self.ball_x_pred + self.ball_move_b
+            x = BX
+            while True:
+                if BX > LBX:
+                    x += 0.05
+                else:
+                    x -= 0.05
+                y = self.ball_move_m * x + self.ball_move_b
+                if distance(x, y, BX, BY) > self.ball_v:
+                    self.ball_x_pred = x
+                    self.ball_y_pred = y
+                    break
             self.ball_move_dir_changed = False
 
         if time.time() - self.predict_time > 0.9:
-            ball_v = distance(LBX, LBY, BX, BY)/0.3
+            self.ball_v = distance(LBX, LBY, BX, BY)/0.3
 
             if math.fabs(self.last_ball_move_angle - self.ball_move_angle) > 20:
                 if LBX - BX != 0: 
@@ -254,7 +268,7 @@ class MyRobot1(RCJSoccerRobot):
                 self.ball_move_b = BY - self.ball_move_m * BX
                 self.ball_move_dir_changed = True
 
-            if ball_v > 0.1:
+            if self.ball_v > 0.1:
                 self.is_ball_moving = True
             else:
                 self.is_ball_moving = False
@@ -338,7 +352,7 @@ class MyRobot1(RCJSoccerRobot):
         m = (Yb - 0.7)/Xb
         b = 0.7
         # Circle Equation
-        r = 0.18
+        r = 0.25
 
         # Intersection of Line and Circle
         y = Yb
@@ -384,48 +398,52 @@ class MyRobot1(RCJSoccerRobot):
         self.ball_move_dir_changed = False
         self.ball_move_m = 0
         self.ball_move_b = 0
-        pygame.init()
-        display = pygame.display.set_mode((300, 300))
+        self.ball_v = 0
+        # pygame.init()
+        # display = pygame.display.set_mode((300, 300))
 
         while self.robot.step(TIME_STEP) != -1:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-            keys=pygame.key.get_pressed()
-            if keys[pygame.K_w]:
-                self.left_motor.setVelocity(10)
-                self.right_motor.setVelocity(10)
-            if keys[pygame.K_s]:
-                self.left_motor.setVelocity(-10)
-                self.right_motor.setVelocity(-10)
-            if keys[pygame.K_d]:
-                self.left_motor.setVelocity(-10)
-                self.right_motor.setVelocity(10)
-            if keys[pygame.K_a]:
-                self.left_motor.setVelocity(10)
-                self.right_motor.setVelocity(-10)
+            # for event in pygame.event.get():
+            #     if event.type == pygame.QUIT:
+            #         pygame.quit()
+            # keys=pygame.key.get_pressed()
+            # if keys[pygame.K_w]:
+            #     self.left_motor.setVelocity(10)
+            #     self.right_motor.setVelocity(10)
+            # if keys[pygame.K_s]:
+            #     self.left_motor.setVelocity(-10)
+            #     self.right_motor.setVelocity(-10)
+            # if keys[pygame.K_d]:
+            #     self.left_motor.setVelocity(-10)
+            #     self.right_motor.setVelocity(10)
+            # if keys[pygame.K_a]:
+            #     self.left_motor.setVelocity(10)
+            #     self.right_motor.setVelocity(-10)
+            # if keys[pygame.K_SPACE]:
+            #     self.left_motor.setVelocity(0)
+            #     self.right_motor.setVelocity(0)
             
-            # if self.is_new_data():  
-            #     self.readSensors()
-            #     self.readTeamData()
-            #     self.checkLackOfProgress()
-            #     self.defineRoll()
-            #     self.predictBallFuturePos()
+            if self.is_new_data():  
+                self.readSensors()
+                self.readTeamData()
+                self.checkLackOfProgress()
+                self.defineRoll()
+                self.predictBallFuturePos()
                 
 
-            #     if self.is_ball:
-            #         if self.lack_of_progress:
-            #             self.LackOfProgress_AI()
-            #         elif self.roll == 'forward':
-            #             self.forward_AI()
-            #         elif self.roll == 'goalkeeper':
-            #             self.goalKeeper_AI()
-            #     else:
-            #         self.moveAndLookAt(
-            #             self.form_positions[self.robot_index - 1][0], 
-            #             self.form_positions[self.robot_index - 1][1],
-            #             self.form_positions[self.robot_index - 1][0], 0.7
-            #         )
+                if self.is_ball:
+                    if self.lack_of_progress:
+                        self.LackOfProgress_AI()
+                    elif self.roll == 'forward':
+                        self.forward_AI()
+                    elif self.roll == 'goalkeeper':
+                        self.goalKeeper_AI()
+                else:
+                    self.moveAndLookAt(
+                        self.form_positions[self.robot_index - 1][0], 
+                        self.form_positions[self.robot_index - 1][1],
+                        self.form_positions[self.robot_index - 1][0], 0.7
+                    )
 
 # taklif: Barname ei benevisid ke agar toop be modate 3 sanye sabet bood yek robot be nazdik tarin noghte khonsa va ba hefze
 # fasele (0.08) beravad va montazere lack of progress shavad.
