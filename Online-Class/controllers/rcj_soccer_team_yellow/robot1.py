@@ -91,8 +91,8 @@ class MyRobot1(RCJSoccerRobot):
                 VL = 10
                 VR = -10
             else:
-                VL = 10 - diff*0.3
-                VR = 10 + diff*0.3
+                VL = 10 - diff*0.4
+                VR = 10 + diff*0.4
         else:
             if diff > 0: diff = diff - 180
             else: diff = -180 - diff
@@ -106,8 +106,8 @@ class MyRobot1(RCJSoccerRobot):
                 VL = 10
                 VR = -10
             else:
-                VL = -10 - diff*0.3
-                VR = -10 + diff*0.3
+                VL = -10 - diff*0.4
+                VR = -10 + diff*0.4
 
         if VR > 10: VR = 10
         if VR < -10: VR = -10
@@ -139,8 +139,8 @@ class MyRobot1(RCJSoccerRobot):
                 VL = 10
                 VR = -10
             else:
-                VL = 10 - diff*0.3
-                VR = 10 + diff*0.3
+                VL = 10 - diff*0.5
+                VR = 10 + diff*0.5
         else:
             if diff > 0: diff = diff - 180
             else: diff = -180 - diff
@@ -151,8 +151,8 @@ class MyRobot1(RCJSoccerRobot):
                 VL = 10
                 VR = -10
             else:
-                VL = -10 - diff*0.3
-                VR = -10 + diff*0.3
+                VL = -10 - diff*0.5
+                VR = -10 + diff*0.5
 
         if VR > 10: VR = 10
         if VR < -10: VR = -10
@@ -200,7 +200,15 @@ class MyRobot1(RCJSoccerRobot):
             self.goalkeeper_x = 0.3
         if self.goalkeeper_x <-0.3:
             self.goalkeeper_x = -0.3
-        self.move(self.goalkeeper_x, -0.7)
+
+
+        if self.ball_y < -0.65 and (self.ball_x > 0.3 or self.ball_x < -0.3):
+            if self.ball_x > 0.3:
+                self.move(self.ball_x-0.02, self.ball_y)
+            elif self.ball_x < -0.3:
+                self.move(self.ball_x+0.02, self.ball_y)
+        else:
+            self.move(self.goalkeeper_x, -0.7)
     def LackOfProgress_AI(self):
         nutralSpot = self.findNutralSpot()[0]
         if self.roll == 'goalkeeper':
@@ -253,7 +261,7 @@ class MyRobot1(RCJSoccerRobot):
                 else:
                     x -= 0.05
                 y = self.ball_move_m * x + self.ball_move_b
-                if distance(x, y, BX, BY) > self.ball_v:
+                if distance(x, y, BX, BY) > 0.4: #self.ball_v:
                     self.ball_x_pred = x
                     self.ball_y_pred = y
                     break
@@ -401,7 +409,7 @@ class MyRobot1(RCJSoccerRobot):
         self.ball_v = 0
         # pygame.init()
         # display = pygame.display.set_mode((300, 300))
-
+        # if self.robot_index == 2: self.roll = 'goalkeeper'
         while self.robot.step(TIME_STEP) != -1:
             # for event in pygame.event.get():
             #     if event.type == pygame.QUIT:
