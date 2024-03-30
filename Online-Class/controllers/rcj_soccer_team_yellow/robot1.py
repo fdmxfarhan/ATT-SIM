@@ -207,7 +207,14 @@ class MyRobot1(RCJSoccerRobot):
             if self.ball_distance > 0.2:
                 self.arrived_to_target = False
     def forward_AI2(self):
-        if self.robot_pos[1] > self.ball_y and self.robot_pos[0] > self.ball_x-0.2 and self.robot_pos[0] < self.ball_x+0.2:
+        # baraye zamani ke toop mire gooshe haye zamin kenare darvaze khodemoon.
+        if self.ball_y < -0.65 and (self.ball_x > 0.3 or self.ball_x < -0.3):
+            if self.ball_x > 0.3:
+                self.move(self.ball_x-0.02, self.ball_y-0.02)
+            elif self.ball_x < -0.3:
+                self.move(self.ball_x+0.02, self.ball_y-0.02)
+        # zamani ke robot jelo tar az toop bashe (jelo giri az goal be khodi)
+        elif self.robot_pos[1] > self.ball_y and self.robot_pos[0] > self.ball_x-0.2 and self.robot_pos[0] < self.ball_x+0.2:
             if self.robot_pos[0] > self.ball_x:
                 self.move(self.ball_x+0.2, self.ball_y-0.1)
             else:
@@ -240,7 +247,9 @@ class MyRobot1(RCJSoccerRobot):
         else:
             self.move(self.goalkeeper_x, -0.7)
     def goalkeeper_AI2(self):
-        if self.robot_pos[1] > -0.5:
+        if time.time() - self.goalkeeper_lop_time > 13 and self.ball_y > 0:
+            self.move(self.ball_x, -0.5)
+        elif self.robot_pos[1] > -0.5:
             self.moveAndLookAt(self.ball_x, -0.6, 1, -0.6)
         else:
             if self.robot_angle < -100 or self.robot_angle > -80:
@@ -254,6 +263,9 @@ class MyRobot1(RCJSoccerRobot):
                     self.right_motor.setVelocity(-10)
                 else:
                     self.stop()
+        # Reset lack of progress time
+        if time.time() - self.goalkeeper_lop_time > 15:
+            self.goalkeeper_lop_time = time.time()
     def LackOfProgress_AI(self):
         nutralSpot = self.findNutralSpot()[0]
         if self.roll == 'goalkeeper':
@@ -453,6 +465,7 @@ class MyRobot1(RCJSoccerRobot):
         self.ball_move_m = 0
         self.ball_move_b = 0
         self.ball_v = 0
+        self.goalkeeper_lop_time = time.time()
         # pygame.init()
         # display = pygame.display.set_mode((300, 300))
         if self.robot_index == 2: self.roll = 'goalkeeper'
