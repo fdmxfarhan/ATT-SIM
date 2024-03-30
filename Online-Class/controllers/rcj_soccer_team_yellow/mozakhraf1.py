@@ -91,8 +91,8 @@ class MyRobot1(RCJSoccerRobot):
                 VL = 10
                 VR = -10
             else:
-                VL = 10 - diff*0.5
-                VR = 10 + diff*0.5
+                VL = 10 - diff*0.4
+                VR = 10 + diff*0.4
         else:
             if diff > 0: diff = diff - 180
             else: diff = -180 - diff
@@ -106,8 +106,8 @@ class MyRobot1(RCJSoccerRobot):
                 VL = 10
                 VR = -10
             else:
-                VL = -10 - diff*0.5
-                VR = -10 + diff*0.5
+                VL = -10 - diff*0.4
+                VR = -10 + diff*0.4
 
         if VR > 10: VR = 10
         if VR < -10: VR = -10
@@ -207,12 +207,7 @@ class MyRobot1(RCJSoccerRobot):
             if self.ball_distance > 0.2:
                 self.arrived_to_target = False
     def forward_AI2(self):
-        if self.robot_pos[1] > self.ball_y and self.robot_pos[0] > self.ball_x-0.2 and self.robot_pos[0] < self.ball_x+0.2:
-            if self.robot_pos[0] > self.ball_x:
-                self.move(self.ball_x+0.2, self.ball_y-0.1)
-            else:
-                self.move(self.ball_x-0.2, self.ball_y-0.1)
-        elif self.ball_distance > 0.1:
+        if self.ball_distance > 0.1:
             if self.ball_x > self.robot_pos[0]:
                 self.move(self.ball_x - 0.02, self.ball_y - 0.02)
             else:
@@ -245,6 +240,7 @@ class MyRobot1(RCJSoccerRobot):
         else:
             if self.robot_angle < -100 or self.robot_angle > -80:
                 self.LookAt(self.robot_pos[0]+1, self.robot_pos[1])
+                print(self.robot_angle)
             else:
                 if self.ball_x > self.robot_pos[0] and self.robot_pos[0] < 0.3:
                     self.left_motor.setVelocity(10)
@@ -257,11 +253,11 @@ class MyRobot1(RCJSoccerRobot):
     def LackOfProgress_AI(self):
         nutralSpot = self.findNutralSpot()[0]
         if self.roll == 'goalkeeper':
-            # self.goalkeeper_AI2()
-            if self.ball_y > 0:
-                self.moveAndLookAt(0, -0.05, 0, 0.7)
-            else:
-                self.moveAndLookAt(0, -0.45, 0, 0.7)
+            self.goalkeeper_AI2()
+            # if self.ball_y > 0:
+            #     self.moveAndLookAt(0, -0.05, 0, 0.7)
+            # else:
+            #     self.moveAndLookAt(0, -0.45, 0, 0.7)
         elif self.is_closest_robot_to_ball:
             self.move(self.ball_x, self.ball_y)
         else:
