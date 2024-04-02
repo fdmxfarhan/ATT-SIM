@@ -10,8 +10,8 @@ robot_number = int(name[1])
 if robot_number == 1:
     robot_controller = MyRobot1(robot)
 elif robot_number == 2:
-    robot_controller = MyRobot1(robot)
+    robot_controller = MyRobot2(robot)
 else:
-    robot_controller = MyRobot1(robot)
+    robot_controller = MyRobot3(robot)
 
 robot_controller.run()

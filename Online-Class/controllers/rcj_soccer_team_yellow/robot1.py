@@ -418,7 +418,7 @@ class MyRobot1(RCJSoccerRobot):
         m = (Yb - 0.7)/Xb
         b = 0.7
         # Circle Equation
-        r = 0.25
+        r = 0.3
 
         # Intersection of Line and Circle
         y = Yb
